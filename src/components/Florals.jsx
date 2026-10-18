@@ -3,7 +3,7 @@
 const LEAF = 'M0 0 C5 -6 5 -14 0 -20 C-5 -14 -5 -6 0 0Z'
 const GREENS = ['#9aab94', '#7f9279', '#b8c5b1']
 
-function Branch({ x, y, rotate, length = 120, bend = 18, leaves = 8, size = 1, tone = 0 }) {
+export function Branch({ x, y, rotate, length = 120, bend = 18, leaves = 8, size = 1, tone = 0 }) {
   const c = { x: bend, y: -length / 2 }
   const end = { x: 0, y: -length }
   const at = (t) => ({
@@ -44,7 +44,7 @@ function Branch({ x, y, rotate, length = 120, bend = 18, leaves = 8, size = 1, t
   )
 }
 
-function Rose({ x, y, r = 16, light = '#f0d9d2', mid = '#e2bcb1', deep = '#c48f84' }) {
+export function Rose({ x, y, r = 16, light = '#f0d9d2', mid = '#e2bcb1', deep = '#c48f84' }) {
   const spiral = []
   for (let a = 0; a <= Math.PI * 5; a += 0.25) {
     const rad = r * (0.12 + (a / (Math.PI * 5)) * 0.7)
@@ -141,5 +141,40 @@ export function Petals({ count = 16 }) {
         />
       ))}
     </div>
+  )
+}
+
+// Footer bouquet: fanned stems, a cluster of roses and a ribbon bow.
+export function Bouquet({ className = '' }) {
+  return (
+    <svg className={`bouquet ${className}`} viewBox="0 0 200 230" aria-hidden="true">
+      <Branch x={100} y={196} rotate={-38} length={130} bend={-14} leaves={9} size={0.9} tone={0} />
+      <Branch x={100} y={196} rotate={38} length={130} bend={14} leaves={9} size={0.9} tone={1} />
+      <Branch x={100} y={196} rotate={-14} length={150} bend={-8} leaves={10} size={0.85} tone={2} />
+      <Branch x={100} y={196} rotate={16} length={145} bend={10} leaves={10} size={0.85} tone={0} />
+      <path d="M100 196 L92 226 M100 196 L100 228 M100 196 L108 226" stroke="#8a9a84" strokeWidth="1.4" />
+      <Rose x={72} y={96} r={15} light="#f6e7e2" mid="#ecd1c9" deep="#d3a79c" />
+      <Rose x={128} y={94} r={15} light="#f6e7e2" mid="#ecd1c9" deep="#d3a79c" />
+      <Rose x={86} y={74} r={18} />
+      <Rose x={116} y={72} r={17} />
+      <Rose x={100} y={98} r={20} />
+      <Rose x={100} y={52} r={13} light="#f6e7e2" mid="#ecd1c9" deep="#d3a79c" />
+      <g fill="none" stroke="#c48f84" strokeWidth="1.6" strokeLinecap="round">
+        <path d="M100 172 q-26 -16 -34 0 q9 14 34 0" />
+        <path d="M100 172 q26 -16 34 0 q-9 14 -34 0" />
+        <path d="M100 172 q-8 18 -20 34 M100 172 q6 20 16 36" />
+      </g>
+      <circle cx="100" cy="172" r="4" fill="#c48f84" />
+    </svg>
+  )
+}
+
+// A single drifting vine for section edges (parallax via CSS).
+export function SideVine({ side = 'right', className = '' }) {
+  return (
+    <svg className={`side-vine ${side} ${className}`} viewBox="0 0 90 260" aria-hidden="true">
+      <Branch x={side === 'right' ? 88 : 2} y={250} rotate={side === 'right' ? -12 : 12} length={230} bend={side === 'right' ? -22 : 22} leaves={14} size={0.85} tone={1} />
+      <Rose x={side === 'right' ? 70 : 20} y={40} r={11} light="#f6e7e2" mid="#ecd1c9" deep="#d3a79c" />
+    </svg>
   )
 }

@@ -1,12 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { invitation as inv } from '../config'
 import Calendar from './Calendar'
 import Countdown from './Countdown'
 import Program from './Program'
 import Reveal from './Reveal'
-import Rsvp from './Rsvp'
 import Sparkles from './Sparkles'
-import { Corner, Petals, Sprig } from './Florals'
+import { Bouquet, Corner, Petals, SideVine, Sprig } from './Florals'
+import { Hourglass, Mosque, Rings, ScrollVine } from './LineArt'
 
 const title = `زفاف ${inv.groom} و${inv.bride}`
 
@@ -60,9 +60,35 @@ function SectionHead({ en, ar }) {
   )
 }
 
+// If the guest hasn't scrolled a few seconds after the card appears,
+// gently peek down and back up once to show there's more below.
+function useScrollPeek() {
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    let cancelled = false
+    const cancel = () => (cancelled = true)
+    const events = ['wheel', 'touchstart', 'keydown', 'mousedown']
+    events.forEach((e) => window.addEventListener(e, cancel, { passive: true, once: true }))
+    const t1 = setTimeout(() => {
+      if (cancelled || window.scrollY > 10) return
+      window.scrollTo({ top: 170, behavior: 'smooth' })
+    }, 5200)
+    const t2 = setTimeout(() => {
+      if (cancelled || window.scrollY > 200) return
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }, 6600)
+    return () => {
+      clearTimeout(t1)
+      clearTimeout(t2)
+      events.forEach((e) => window.removeEventListener(e, cancel))
+    }
+  }, [])
+}
+
 export default function Invitation() {
   const [toast, flash] = useFlash()
   const { dateEn } = inv
+  useScrollPeek()
 
   const copyLocation = async () => {
     try {
@@ -99,6 +125,7 @@ export default function Invitation() {
           <p className="basmala fade-up" style={{ animationDelay: '0.6s' }}>
             بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
           </p>
+          <Rings className="hero-rings draw-now" />
           <p className="lead fade-up" style={{ animationDelay: '1s' }}>
             بكل الحب والسرور، ندعوكم لمشاركتنا فرحة زفاف
           </p>
@@ -126,9 +153,13 @@ export default function Invitation() {
             {inv.venue}
           </p>
         </div>
-        <a href="#verse" className="scroll-cue fade-up" style={{ animationDelay: '3.6s' }} aria-label="انزل للأسفل">
-          <span />
-        </a>
+        <div className="scroll-guide-wrap">
+          <a href="#verse" className="scroll-guide fade-up" style={{ animationDelay: '3.6s' }}>
+            <span className="sg-script">scroll down</span>
+            <span className="sg-text">مرّر للأسفل لمعرفة التفاصيل</span>
+            <ScrollVine />
+          </a>
+        </div>
       </section>
 
       {/* ---------- Verse ---------- */}
@@ -144,7 +175,9 @@ export default function Invitation() {
       </section>
 
       {/* ---------- Save the date ---------- */}
-      <section className="section tinted">
+      <section className="section tinted has-vines">
+        <SideVine side="right" />
+        <SideVine side="left" />
         <SectionHead en="Save the Date" ar="احفظوا الموعد" />
         <div className="std">
           <Reveal className="card small-card" delay={100}>
@@ -180,13 +213,18 @@ export default function Invitation() {
       {/* ---------- Countdown ---------- */}
       <section className="section">
         <SectionHead en="Counting the Days" ar="على الموعد بإذن الله" />
+        <Reveal className="illus">
+          <Hourglass className="hourglass" />
+        </Reveal>
         <Reveal delay={150}>
           <Countdown date={inv.date} />
         </Reveal>
       </section>
 
       {/* ---------- Program ---------- */}
-      <section className="section tinted">
+      <section className="section tinted has-vines">
+        <SideVine side="left" className="low" />
+        <SideVine side="right" className="low" />
         <SectionHead en="Order of the Evening" ar="فقرات الليلة" />
         <Program />
       </section>
@@ -196,9 +234,7 @@ export default function Invitation() {
         <SectionHead en="The Venue" ar="كيف تصل إلينا" />
         <Reveal className="card location-card" delay={150}>
           <Corner className="c-tr small" />
-          <div className="pin" aria-hidden="true">
-            <span />
-          </div>
+          <Mosque className="mosque" />
           <p className="detail-main">{inv.venue}</p>
           {inv.address && <p className="detail-sub">{inv.address}</p>}
           <div className="actions">
@@ -212,18 +248,10 @@ export default function Invitation() {
         </Reveal>
       </section>
 
-      {/* ---------- RSVP ---------- */}
-      <section className="section tinted">
-        <SectionHead en="Kindly Reply" ar="هل ستشاركنا الفرحة؟" />
-        <Reveal className="card rsvp-card" delay={150}>
-          <Rsvp />
-        </Reveal>
-      </section>
-
       {/* ---------- Footer ---------- */}
       <footer className="footer">
-        <Reveal>
-          <Sprig />
+        <Reveal className="illus">
+          <Bouquet />
           <p className="dua">بارك الله لكما، وبارك عليكما، وجمع بينكما في خير</p>
           <p className="footer-script">
             {inv.groomEn} & {inv.brideEn}
