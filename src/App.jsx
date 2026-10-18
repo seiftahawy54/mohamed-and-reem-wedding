@@ -7,10 +7,54 @@ export default function App() {
   const [stage, setStage] = useState('intro') // intro | opening | reveal | open
   const [playing, setPlaying] = useState(false)
   const music = useRef(null)
-  const hasFile = useRef(false)
+  const playingRef = useRef(false)
+  const userPaused = useRef(false) // guest turned music off themselves; never auto-start it again
+
+  const setPlayingBoth = (v) => {
+    playingRef.current = v
+    setPlaying(v)
+  }
+
+  // Must run synchronously inside gesture handlers so browsers allow the audio.
+  const startMusic = () => {
+    if (playingRef.current) return
+    if (!music.current) music.current = createMusic(true)
+    music.current
+      .play()
+      .then(() => setPlayingBoth(true))
+      .catch(() => setPlayingBoth(false))
+  }
 
   useEffect(() => {
-    detectMusicFile().then((ok) => (hasFile.current = ok))
+    // Preload the song now and try to autoplay (allowed by some browsers, e.g. desktop Chrome on revisit)
+    music.current = createMusic(true)
+    startMusic()
+    // Only fall back to the synthesized melody if the song file is really missing
+    detectMusicFile().then((ok) => {
+      if (!ok && !playingRef.current) music.current = createMusic(false)
+    })
+
+    // Otherwise start on the guest's first tap/click/key anywhere on the page
+    const gestures = ['pointerup', 'touchend', 'keydown', 'click']
+    const onGesture = (e) => {
+      if (e.target.closest?.('.music-toggle')) return // the toggle handles itself
+      if (!userPaused.current) startMusic()
+    }
+    gestures.forEach((g) => window.addEventListener(g, onGesture, true))
+
+    // Phones pause audio in the background; resume when the guest comes back
+    const onVisible = () => {
+      if (document.visibilityState === 'visible' && playingRef.current && !userPaused.current) {
+        music.current?.play().catch(() => setPlayingBoth(false))
+      }
+    }
+    document.addEventListener('visibilitychange', onVisible)
+
+    return () => {
+      music.current?.pause()
+      gestures.forEach((g) => window.removeEventListener(g, onGesture, true))
+      document.removeEventListener('visibilitychange', onVisible)
+    }
   }, [])
 
   // Scroll-driven CSS vars: --scroll (px) for parallax, --progress (0..1) for the top bar
@@ -29,28 +73,10 @@ export default function App() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  const startMusic = () => {
-    if (!music.current) music.current = createMusic(hasFile.current)
-    music.current
-      .play()
-      .then(() => setPlaying(true))
-      .catch(() => setPlaying(false))
-  }
-
-  // byUser: opened by tapping the seal (a user gesture, so audio may start now).
-  // Auto-opened envelopes can't play audio yet; start it on the guest's first tap/key instead.
+  // byUser: opened by tapping the seal, a gesture, so the song can start right now.
+  // Auto-opened: the global gesture listener starts it on the guest's first tap.
   const handleOpen = (byUser) => {
-    if (byUser) {
-      startMusic()
-    } else {
-      const events = ['pointerup', 'touchend', 'keydown', 'click']
-      const onFirstGesture = (e) => {
-        if (e.target.closest?.('.music-toggle')) return // the toggle handles itself
-        events.forEach((ev) => window.removeEventListener(ev, onFirstGesture, true))
-        if (!music.current) startMusic()
-      }
-      events.forEach((ev) => window.addEventListener(ev, onFirstGesture, true))
-    }
+    if (byUser && !userPaused.current) startMusic()
     setStage('opening')
     // mount the page as the envelope starts fading so its entrance animations aren't hidden
     setTimeout(() => setStage('reveal'), 2200)
@@ -58,12 +84,13 @@ export default function App() {
   }
 
   const toggleMusic = () => {
-    if (!music.current) return startMusic()
-    if (playing) {
+    if (playingRef.current) {
+      userPaused.current = true
       music.current.pause()
-      setPlaying(false)
+      setPlayingBoth(false)
     } else {
-      music.current.play().then(() => setPlaying(true))
+      userPaused.current = false
+      startMusic()
     }
   }
 

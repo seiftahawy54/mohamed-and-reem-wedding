@@ -244,7 +244,9 @@ class FileMusic {
   constructor(src) {
     this.audio = new Audio(src)
     this.audio.loop = true
+    this.audio.preload = 'auto' // load early so a tap starts it instantly
     this.audio.volume = 0
+    this.audio.load()
   }
   async play() {
     await this.audio.play()
@@ -272,7 +274,7 @@ export async function detectMusicFile() {
   }
 }
 
-// Must be called synchronously inside a user gesture (browser autoplay policy).
+// Creating is safe anytime; play() must run inside a user gesture unless the browser allows autoplay.
 export function createMusic(useFile) {
   return useFile ? new FileMusic(SRC) : new SynthMusic()
 }

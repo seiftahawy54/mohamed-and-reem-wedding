@@ -61,47 +61,49 @@ function SectionHead({ en, ar }) {
 }
 
 // Slowly scroll the page to the end once the opening card has appeared.
-// Stops for good at the bottom or as soon as the guest interacts.
+// Pauses whenever the guest interacts, and picks up again after a minute of no interaction.
 const AUTO_SCROLL_DELAY = 4500 // ms, lets the opening card finish animating
 const AUTO_SCROLL_SPEED = 55 // px per second
+const AUTO_SCROLL_RESUME = 60000 // ms of no interaction before scrolling resumes
 
 function useAutoScroll() {
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     let frame = 0
-    let stopped = false
-    let pos = window.scrollY
+    let pos = 0
     let last = 0
-
-    const events = ['wheel', 'touchstart', 'pointerdown', 'keydown']
-    const stop = (e) => {
-      if (e?.target?.closest?.('.music-toggle')) return // turning music on/off shouldn't stop the scroll
-      stopped = true
-      cancelAnimationFrame(frame)
-      events.forEach((e) => window.removeEventListener(e, stop))
-    }
-    events.forEach((e) => window.addEventListener(e, stop, { passive: true }))
+    let timer = 0
 
     const step = (now) => {
-      if (stopped) return
       const dt = last ? (now - last) / 1000 : 0
       last = now
       const max = document.documentElement.scrollHeight - window.innerHeight
       pos = Math.min(max, pos + AUTO_SCROLL_SPEED * dt)
       window.scrollTo({ top: pos, behavior: 'instant' })
-      if (pos >= max - 1) return stop()
+      if (pos < max - 1) frame = requestAnimationFrame(step)
+    }
+
+    const run = () => {
+      pos = window.scrollY
+      last = 0
       frame = requestAnimationFrame(step)
     }
 
-    const start = setTimeout(() => {
-      if (stopped) return
-      pos = window.scrollY
-      frame = requestAnimationFrame(step)
-    }, AUTO_SCROLL_DELAY)
+    const pause = (e) => {
+      if (e.target.closest?.('.music-toggle')) return // turning music on/off shouldn't stop the scroll
+      cancelAnimationFrame(frame)
+      clearTimeout(timer)
+      timer = setTimeout(run, AUTO_SCROLL_RESUME)
+    }
+
+    const events = ['wheel', 'touchstart', 'touchmove', 'pointerdown', 'keydown']
+    events.forEach((e) => window.addEventListener(e, pause, { passive: true }))
+    timer = setTimeout(run, AUTO_SCROLL_DELAY)
 
     return () => {
-      clearTimeout(start)
-      stop()
+      cancelAnimationFrame(frame)
+      clearTimeout(timer)
+      events.forEach((e) => window.removeEventListener(e, pause))
     }
   }, [])
 }
