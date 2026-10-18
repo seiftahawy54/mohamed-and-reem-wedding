@@ -60,27 +60,47 @@ function SectionHead({ en, ar }) {
   )
 }
 
-// If the guest hasn't scrolled a few seconds after the card appears,
-// gently peek down and back up once to show there's more below.
-function useScrollPeek() {
+// Slowly scroll the page to the end once the opening card has appeared.
+// Stops for good at the bottom or as soon as the guest interacts.
+const AUTO_SCROLL_DELAY = 4500 // ms, lets the opening card finish animating
+const AUTO_SCROLL_SPEED = 55 // px per second
+
+function useAutoScroll() {
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    let cancelled = false
-    const cancel = () => (cancelled = true)
-    const events = ['wheel', 'touchstart', 'keydown', 'mousedown']
-    events.forEach((e) => window.addEventListener(e, cancel, { passive: true, once: true }))
-    const t1 = setTimeout(() => {
-      if (cancelled || window.scrollY > 10) return
-      window.scrollTo({ top: 170, behavior: 'smooth' })
-    }, 5200)
-    const t2 = setTimeout(() => {
-      if (cancelled || window.scrollY > 200) return
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }, 6600)
+    let frame = 0
+    let stopped = false
+    let pos = window.scrollY
+    let last = 0
+
+    const events = ['wheel', 'touchstart', 'pointerdown', 'keydown']
+    const stop = () => {
+      stopped = true
+      cancelAnimationFrame(frame)
+      events.forEach((e) => window.removeEventListener(e, stop))
+    }
+    events.forEach((e) => window.addEventListener(e, stop, { passive: true }))
+
+    const step = (now) => {
+      if (stopped) return
+      const dt = last ? (now - last) / 1000 : 0
+      last = now
+      const max = document.documentElement.scrollHeight - window.innerHeight
+      pos = Math.min(max, pos + AUTO_SCROLL_SPEED * dt)
+      window.scrollTo({ top: pos, behavior: 'instant' })
+      if (pos >= max - 1) return stop()
+      frame = requestAnimationFrame(step)
+    }
+
+    const start = setTimeout(() => {
+      if (stopped) return
+      pos = window.scrollY
+      frame = requestAnimationFrame(step)
+    }, AUTO_SCROLL_DELAY)
+
     return () => {
-      clearTimeout(t1)
-      clearTimeout(t2)
-      events.forEach((e) => window.removeEventListener(e, cancel))
+      clearTimeout(start)
+      stop()
     }
   }, [])
 }
@@ -88,7 +108,7 @@ function useScrollPeek() {
 export default function Invitation() {
   const [toast, flash] = useFlash()
   const { dateEn } = inv
-  useScrollPeek()
+  useAutoScroll()
 
   const copyLocation = async () => {
     try {
