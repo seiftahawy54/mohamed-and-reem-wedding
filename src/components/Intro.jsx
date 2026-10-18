@@ -36,6 +36,7 @@ export default function Intro({ onOpen }) {
       <div className="intro-inner">
         <p className="intro-kicker">You are invited</p>
 
+        <div className="env-attn">
         <div className="envelope">
           <div className="env-back" />
           <div className="letter">
@@ -73,6 +74,10 @@ export default function Intro({ onOpen }) {
               ))}
             </span>
           </button>
+          <svg className="tap-hand" viewBox="0 0 34 42" aria-hidden="true">
+            <path d="M11 5a3 3 0 0 1 6 0v13a3 3 0 0 1 6 0v2a3 3 0 0 1 6 0v8c0 7.5-5 12-11.5 12H16c-4 0-6.3-2-8.3-5L2.2 26.6a3 3 0 0 1 5-3.3L11 27Z" />
+          </svg>
+        </div>
         </div>
 
         <p className="intro-hint">اضغط لفتح الدعوة 🎵</p>

@@ -63,7 +63,7 @@ function SectionHead({ en, ar }) {
 // Slowly scroll the page to the end once the opening card has appeared.
 // Pauses whenever the guest interacts, and picks up again after a minute of no interaction.
 const AUTO_SCROLL_DELAY = 4500 // ms, lets the opening card finish animating
-const AUTO_SCROLL_SPEED = 55 // px per second
+const AUTO_SCROLL_SPEED = 80 // px per second
 const AUTO_SCROLL_RESUME = 60000 // ms of no interaction before scrolling resumes
 
 function useAutoScroll() {
