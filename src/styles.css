@@ -187,6 +187,8 @@ button {
   position: fixed;
   inset: 0;
   z-index: 50;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
   display: grid;
   place-items: center;
   padding: 16px;
@@ -229,10 +231,19 @@ button {
 
 .intro-hint {
   font-family: var(--font-ar);
-  font-size: 1.05rem;
+  font-size: 1.2rem;
   color: var(--ink);
+  padding: 8px 22px;
+  border: 1px solid var(--rose-light);
+  border-radius: 999px;
+  background: rgba(255, 253, 249, 0.7);
   opacity: 0;
-  animation: fade-up 1.2s var(--ease) 1.2s forwards;
+  animation: fade-up 1.2s var(--ease) 1.2s forwards, hint-pulse 1.8s ease-in-out 2.4s infinite;
+}
+
+@keyframes hint-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(196, 143, 132, 0.35); }
+  50% { transform: scale(1.04); box-shadow: 0 0 0 10px rgba(196, 143, 132, 0); }
 }
 
 .intro-note {

@@ -1,8 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { invitation as inv } from '../config'
 import { Corner } from './Florals'
-
-const AUTO_OPEN_DELAY = 3000 // ms
 
 export default function Intro({ onOpen }) {
   const [opening, setOpening] = useState(false)
@@ -30,19 +28,15 @@ export default function Intro({ onOpen }) {
     onOpen(byUser)
   }
 
-  // Open by itself once the envelope has settled, if the guest hasn't tapped yet
-  useEffect(() => {
-    if (opening) return
-    const t = setTimeout(() => open(false), AUTO_OPEN_DELAY)
-    return () => clearTimeout(t)
-  })
+  // The envelope waits for a tap: that tap is the user gesture browsers require
+  // before any audio can play, so the song starts exactly as the envelope opens.
 
   return (
-    <div className={`intro ${opening ? 'is-opening' : ''}`}>
+    <div className={`intro ${opening ? 'is-opening' : ''}`} onClick={() => open(true)}>
       <div className="intro-inner">
         <p className="intro-kicker">You are invited</p>
 
-        <div className="envelope" onClick={() => open(true)}>
+        <div className="envelope">
           <div className="env-back" />
           <div className="letter">
             <Corner className="letter-corner" />
@@ -56,7 +50,7 @@ export default function Intro({ onOpen }) {
           </div>
           <div className="env-pocket" />
           <div className="env-flap" />
-          <button className="wax" onClick={() => open(true)} aria-label="افتح الدعوة">
+          <button className="wax" aria-label="افتح الدعوة">
             <span className="wax-inner">
               {inv.groomEn[0]}
               <i>&</i>
@@ -81,7 +75,7 @@ export default function Intro({ onOpen }) {
           </button>
         </div>
 
-        <p className="intro-hint">اضغط على الختم لفتح الدعوة</p>
+        <p className="intro-hint">اضغط لفتح الدعوة 🎵</p>
         <p className="intro-note">🔊 شغّل الصوت لتجربة أجمل</p>
       </div>
     </div>
