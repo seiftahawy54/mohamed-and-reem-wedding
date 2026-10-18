@@ -29,12 +29,28 @@ export default function App() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  const handleOpen = () => {
-    music.current = createMusic(hasFile.current)
+  const startMusic = () => {
+    if (!music.current) music.current = createMusic(hasFile.current)
     music.current
       .play()
       .then(() => setPlaying(true))
       .catch(() => setPlaying(false))
+  }
+
+  // byUser: opened by tapping the seal (a user gesture, so audio may start now).
+  // Auto-opened envelopes can't play audio yet; start it on the guest's first tap/key instead.
+  const handleOpen = (byUser) => {
+    if (byUser) {
+      startMusic()
+    } else {
+      const events = ['pointerup', 'touchend', 'keydown', 'click']
+      const onFirstGesture = (e) => {
+        if (e.target.closest?.('.music-toggle')) return // the toggle handles itself
+        events.forEach((ev) => window.removeEventListener(ev, onFirstGesture, true))
+        if (!music.current) startMusic()
+      }
+      events.forEach((ev) => window.addEventListener(ev, onFirstGesture, true))
+    }
     setStage('opening')
     // mount the page as the envelope starts fading so its entrance animations aren't hidden
     setTimeout(() => setStage('reveal'), 2200)
@@ -42,7 +58,7 @@ export default function App() {
   }
 
   const toggleMusic = () => {
-    if (!music.current) return
+    if (!music.current) return startMusic()
     if (playing) {
       music.current.pause()
       setPlaying(false)

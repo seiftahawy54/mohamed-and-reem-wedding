@@ -1,6 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { invitation as inv } from '../config'
 import { Corner } from './Florals'
+
+const AUTO_OPEN_DELAY = 3000 // ms
 
 export default function Intro({ onOpen }) {
   const [opening, setOpening] = useState(false)
@@ -22,18 +24,25 @@ export default function Intro({ onOpen }) {
     []
   )
 
-  const open = () => {
+  const open = (byUser) => {
     if (opening) return
     setOpening(true)
-    onOpen()
+    onOpen(byUser)
   }
+
+  // Open by itself once the envelope has settled, if the guest hasn't tapped yet
+  useEffect(() => {
+    if (opening) return
+    const t = setTimeout(() => open(false), AUTO_OPEN_DELAY)
+    return () => clearTimeout(t)
+  })
 
   return (
     <div className={`intro ${opening ? 'is-opening' : ''}`}>
       <div className="intro-inner">
         <p className="intro-kicker">You are invited</p>
 
-        <div className="envelope" onClick={open}>
+        <div className="envelope" onClick={() => open(true)}>
           <div className="env-back" />
           <div className="letter">
             <Corner className="letter-corner" />
@@ -47,7 +56,7 @@ export default function Intro({ onOpen }) {
           </div>
           <div className="env-pocket" />
           <div className="env-flap" />
-          <button className="wax" onClick={open} aria-label="افتح الدعوة">
+          <button className="wax" onClick={() => open(true)} aria-label="افتح الدعوة">
             <span className="wax-inner">
               {inv.groomEn[0]}
               <i>&</i>

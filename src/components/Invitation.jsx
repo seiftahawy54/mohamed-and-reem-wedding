@@ -74,7 +74,8 @@ function useAutoScroll() {
     let last = 0
 
     const events = ['wheel', 'touchstart', 'pointerdown', 'keydown']
-    const stop = () => {
+    const stop = (e) => {
+      if (e?.target?.closest?.('.music-toggle')) return // turning music on/off shouldn't stop the scroll
       stopped = true
       cancelAnimationFrame(frame)
       events.forEach((e) => window.removeEventListener(e, stop))
@@ -150,7 +151,7 @@ export default function Invitation() {
             بكل الحب والسرور، ندعوكم لمشاركتنا فرحة زفاف
           </p>
 
-          <Sparkles className="names-wrap">
+          <Sparkles className="names-wrap" auto>
             <h1 className="names fade-up" style={{ animationDelay: '1.4s' }}>
               {inv.groom} <span className="amp">&</span> {inv.bride}
             </h1>
