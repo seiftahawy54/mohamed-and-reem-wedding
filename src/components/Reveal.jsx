@@ -1,19 +1,11 @@
-import { createContext, useContext, useEffect, useRef, useState } from 'react'
-
-export const PageActiveContext = createContext(null)
+import { useEffect, useRef, useState } from 'react'
 
 export default function Reveal({ as: Tag = 'div', className = '', delay = 0, children, ...rest }) {
   const ref = useRef(null)
-  const pageActive = useContext(PageActiveContext)
   const [shown, setShown] = useState(false)
 
   useEffect(() => {
-    if (pageActive !== null) {
-      if (pageActive) setShown(true)
-      return
-    }
     const el = ref.current
-    if (!el) return
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -25,7 +17,7 @@ export default function Reveal({ as: Tag = 'div', className = '', delay = 0, chi
     )
     io.observe(el)
     return () => io.disconnect()
-  }, [pageActive])
+  }, [])
 
   return (
     <Tag
